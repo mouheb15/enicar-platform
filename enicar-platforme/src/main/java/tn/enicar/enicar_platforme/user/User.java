@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 @Getter
 @Setter
@@ -35,6 +35,8 @@ public class User implements UserDetails, Principal {
     private LocalDate dateOfBirth;
     @Column(unique = true)
     private String email;
+    @Column(unique = true)
+    private Integer cin;
     private String password;
     private boolean accountLocked;
     private boolean enabled;
@@ -47,11 +49,9 @@ public class User implements UserDetails, Principal {
     @Column(insertable = false)
     private LocalDateTime lastModifiedDate;
 
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    private List<Role> roles;
-
-
+    @ManyToOne
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
 
     @Override
     public String getName() {
@@ -60,10 +60,7 @@ public class User implements UserDetails, Principal {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.roles
-                .stream()
-                .map(r -> new SimpleGrantedAuthority(r.getName()))
-                .collect(Collectors.toList());
+        return List.of(new SimpleGrantedAuthority(this.role.getName()));
     }
 
     @Override

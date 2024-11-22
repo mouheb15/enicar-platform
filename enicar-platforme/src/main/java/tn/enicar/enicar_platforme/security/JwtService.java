@@ -59,6 +59,7 @@ public class JwtService {
         var authorities = userDetails.getAuthorities()
                 .stream()
                 .map(GrantedAuthority::getAuthority)
+                .map(authority -> "ROLE_" + authority)
                 .toList();
         return Jwts
                 .builder()

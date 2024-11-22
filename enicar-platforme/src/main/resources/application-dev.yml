@@ -48,3 +48,15 @@ application:
       photos-output-path: ./uploads
 server:
   port: 8088
+roles:
+  - STUDENT
+  - PROFESSOR
+  - ADMIN
+
+admin-user:
+  firstname: Admin
+  lastname: Admin
+  date-of-birth: 2000-11-14
+  cin: 99999999
+  email: admin@enicar.ucar.tn
+  password: adminadmin

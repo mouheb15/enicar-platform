@@ -15,13 +15,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
@@ -35,26 +41,38 @@ public class JwtFilter extends OncePerRequestFilter {
         if(request.getServletPath().contains("/api/v1/auth")){
             filterChain.doFilter(request,response);
             return ;
-
         }
         final String authHeader = request.getHeader(AUTHORIZATION);
-        final String jwt ;
+        final String jwt;
         final String userEmail;
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")){
             filterChain.doFilter(request,response);
             return;
         }
+
         jwt = authHeader.substring(7);
         userEmail = jwtService.extractUsername(jwt);
-        if(userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null ) {
+
+        if(userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
-            if(jwtService.isTokenValid(jwt,userDetails)){
+
+            if(jwtService.isTokenValid(jwt, userDetails)){
+                // Convert authorities (from JWT) into GrantedAuthority objects
+                var authorities = jwtService.extractClaim(jwt, claims -> claims.get("authorities", List.class))
+                        .stream()
+                        .map(role -> new SimpleGrantedAuthority((String) role))
+                        .toList();
+
+                // Log the authorities to check
+                logger.info("Extracted authorities from JWT: {}", authorities);
+
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
-                        userDetails.getAuthorities()
-
+                        authorities // Set the converted authorities here
                 );
+
                 authToken.setDetails(
                         new WebAuthenticationDetailsSource().buildDetails(request)
                 );

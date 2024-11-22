@@ -10,7 +10,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.enicar.enicar_platforme.user.User;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -36,9 +38,8 @@ public class Role {
     private LocalDateTime lastModifiedDate;
 
 
-    @ManyToMany(mappedBy = "roles")
-    @JsonIgnore
-    private List<User> users;
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<User> users = new HashSet<>();
 
 
 }

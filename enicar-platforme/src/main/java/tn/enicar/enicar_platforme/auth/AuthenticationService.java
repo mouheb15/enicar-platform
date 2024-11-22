@@ -8,20 +8,16 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import tn.enicar.enicar_platforme.email.EmailService;
 import tn.enicar.enicar_platforme.email.EmailTemplateName;
 import tn.enicar.enicar_platforme.role.RoleRepository;
 import tn.enicar.enicar_platforme.security.JwtService;
-import tn.enicar.enicar_platforme.user.Token;
-import tn.enicar.enicar_platforme.user.TokenRepository;
-import tn.enicar.enicar_platforme.user.User;
-import tn.enicar.enicar_platforme.user.UserRepository;
+import tn.enicar.enicar_platforme.user.*;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -34,20 +30,24 @@ public class AuthenticationService {
     private final EmailService emailService;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final ApprovedUserRepository approvedUserRepository ;
     @Value("${application.security.mailing.frontend.activation-url}")
     private String activationUrl;
 
     public void register(RegistrationRequest request) throws MessagingException {
-        var userRole = roleRepository.findByName("USER")
-                .orElseThrow(()->new IllegalStateException("ROLE USER was not itialized "));
+        var approvedUser = approvedUserRepository.findByCin(request.getCin())
+                .orElseThrow(() -> new RuntimeException("CIN not found in the approved list"));
+        var userRole = roleRepository.findByName(approvedUser.getRole().getName())
+                .orElseThrow(()->new IllegalStateException("ROLE was not initialized "));
         var user = User.builder()
                 .firstname(request.getFirstname())
                 .lastname(request.getLastname())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .cin(request.getCin())
                 .accountLocked(false)
                 .enabled(false)
-                .roles(List.of(userRole))
+                .role(userRole)
                 .build();
         userRepository.save(user);
         sendValidationEmail(user);
@@ -121,5 +121,18 @@ public class AuthenticationService {
         userRepository.save(user) ;
         savedToken.setValidatedAt(LocalDateTime.now());
         tokenRepository.save(savedToken);
+    }
+
+    public void addApprovedUser(ApprovedUserRequest approvedUserRequest) throws MessagingException {
+        var role = roleRepository.findByName(approvedUserRequest.getRole())
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+
+        var approvedUser = ApprovedUser.builder()
+                .cin(approvedUserRequest.getCin())
+                .role(role)
+                .email(approvedUserRequest.getEmail())
+                .build();
+
+        approvedUserRepository.save(approvedUser);
     }
 }

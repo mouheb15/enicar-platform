@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -40,4 +41,10 @@ public class AuthenticationController {
         service.activateAccounte(token);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PostMapping("/admin/add-approve-user")
+    public ResponseEntity<String> addApprovedUser(@RequestBody @Valid ApprovedUserRequest approvedUserRequest) throws MessagingException {
+        service.addApprovedUser(approvedUserRequest);
+        return ResponseEntity.ok("Approved user added successfully");
+    }
 }

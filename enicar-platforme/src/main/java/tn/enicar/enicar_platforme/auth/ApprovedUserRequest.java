@@ -5,10 +5,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+
 @Getter
 @Setter
 @Builder
-public class RegistrationRequest {
+public class ApprovedUserRequest {
     @NotEmpty(message=" Firstname is mandatory")
     @NotBlank(message=" Firstname is mandatory")
     private String firstname;
@@ -22,8 +23,7 @@ public class RegistrationRequest {
     @NotNull(message=" Cin is mandatory")
     @Digits(integer = 8, fraction = 0, message = "CIN must be an 8-digit number")
     private Integer cin;
-    @NotEmpty(message=" Password is mandatory")
-    @NotBlank(message=" Password is mandatory")
-    @Size(min=8,message ="password should be 8 characters minimum")
-    private String password;
+    @NotEmpty(message=" role is mandatory")
+    @NotBlank(message=" role is mandatory")
+    private String role ;
 }
