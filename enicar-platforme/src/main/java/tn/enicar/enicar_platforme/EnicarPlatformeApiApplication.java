@@ -15,7 +15,6 @@ import tn.enicar.enicar_platforme.role.RoleRepository;
 import tn.enicar.enicar_platforme.user.User;
 import tn.enicar.enicar_platforme.user.UserRepository;
 
-
 import java.time.LocalDate;
 import java.util.List;
 
@@ -62,10 +61,14 @@ public class EnicarPlatformeApiApplication {
 					}
 				});
 
+				// Check if admin user already exists
+				if (userRepository.findByCin(adminCin).isEmpty()) {
+					// Retrieve the ADMIN role
+					var adminRole = roleRepository.findByName("ADMIN").orElseThrow(() ->
+							new IllegalStateException("Admin role not found. Please ensure roles are initialized."));
 
-
-					var adminRole = roleRepository.findByName("ADMIN").get();
-					var user = User.builder()
+					// Create and save the admin user
+					var adminUser = User.builder()
 							.firstname(adminFirstName)
 							.lastname(adminLastName)
 							.dateOfBirth(LocalDate.parse(adminDateOfBirth))
@@ -76,8 +79,12 @@ public class EnicarPlatformeApiApplication {
 							.email(adminEmail)
 							.role(adminRole)
 							.build();
-					userRepository.save(user);
+					userRepository.save(adminUser);
 
+					System.out.println("Admin user initialized successfully.");
+				} else {
+					System.out.println("Admin user already exists with CIN: " + adminCin);
+				}
 			};
 		}
 	}

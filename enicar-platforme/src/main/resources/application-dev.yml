@@ -60,3 +60,7 @@ admin-user:
   cin: 99999999
   email: admin@enicar.ucar.tn
   password: adminadmin
+document:
+  upload:
+    dir:
+      ./uploads
